@@ -39,6 +39,34 @@ export async function extractExifData(file) {
   }
 }
 
+/**
+ * Reverse geocode GPS coordinates using Nominatim (OpenStreetMap).
+ * Returns a suggested place name string, or null on failure.
+ */
+export async function reverseGeocode(lat, lng) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=cs`,
+      { headers: { "User-Agent": "TuristNote/1.0" } },
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const a = data.address ?? {};
+    // prefer village/town/city, fall back to county/state
+    return (
+      a.village ??
+      a.town ??
+      a.city ??
+      a.municipality ??
+      a.county ??
+      a.state ??
+      null
+    );
+  } catch {
+    return null;
+  }
+}
+
 /** @deprecated use extractExifData */
 export async function extractGPS(file) {
   const { lat, lng } = await extractExifData(file);

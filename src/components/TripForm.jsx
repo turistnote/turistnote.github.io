@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { extractExifData, resizeImage } from "../utils";
+import { extractExifData, resizeImage, reverseGeocode } from "../utils";
 import { IconCamera, IconPhoto, IconMapPin, IconX } from "./Icons";
 
 const today = new Date().toISOString().slice(0, 10);
@@ -22,6 +22,7 @@ export default function TripForm({ onSave, onCancel, initialData = null }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [dateFromExif, setDateFromExif] = useState(false);
+  const [nameSuggestion, setNameSuggestion] = useState(null);
   const fileRef = useRef(null);
   const cameraRef = useRef(null);
 
@@ -38,6 +39,8 @@ export default function TripForm({ onSave, onCancel, initialData = null }) {
       ]);
       if (exif.lat != null && exif.lng != null) {
         setGps({ lat: exif.lat, lng: exif.lng });
+        const suggestion = await reverseGeocode(exif.lat, exif.lng);
+        if (suggestion) setNameSuggestion(suggestion);
       }
       if (exif.date) {
         setDate(exif.date);
@@ -56,6 +59,7 @@ export default function TripForm({ onSave, onCancel, initialData = null }) {
     setFileName(null);
     setGps(null);
     setDateFromExif(false);
+    setNameSuggestion(null);
     if (fileRef.current) fileRef.current.value = "";
     if (cameraRef.current) cameraRef.current.value = "";
   }
@@ -108,6 +112,18 @@ export default function TripForm({ onSave, onCancel, initialData = null }) {
           className={inputClass}
           placeholder="např. Karlštejn"
         />
+        {nameSuggestion && name !== nameSuggestion && (
+          <button
+            type="button"
+            onClick={() => {
+              setName(nameSuggestion);
+              setNameSuggestion(null);
+            }}
+            className="self-start text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700 rounded-full px-3 py-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors flex items-center gap-1.5"
+          >
+            <IconMapPin className="w-3 h-3" /> Použít: {nameSuggestion}
+          </button>
+        )}
       </div>
 
       <div className="flex gap-3">
