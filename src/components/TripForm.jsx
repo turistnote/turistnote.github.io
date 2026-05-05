@@ -174,14 +174,14 @@ export default function TripForm({ onSave, onCancel, initialData = null }) {
         <input
           ref={fileRef}
           type="file"
-          accept="image/*"
+          // accept="image/*"
           onChange={handleFile}
           className="hidden"
         />
         <input
           ref={cameraRef}
           type="file"
-          accept="image/*"
+          // accept="image/*"
           capture="environment"
           onChange={handleFile}
           className="hidden"
