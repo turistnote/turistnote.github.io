@@ -43,8 +43,7 @@ export async function extractExifData(file) {
     const lng =
       validCoord(gpsData?.longitude) ?? validCoord(fullData?.longitude) ?? null;
 
-    const rawDate =
-      fullData?.DateTimeOriginal ?? fullData?.CreateDate ?? null;
+    const rawDate = fullData?.DateTimeOriginal ?? fullData?.CreateDate ?? null;
     let date = null;
     if (rawDate instanceof Date && !isNaN(rawDate)) {
       date = rawDate.toISOString().slice(0, 10);
