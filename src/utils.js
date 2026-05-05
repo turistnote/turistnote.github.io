@@ -18,8 +18,8 @@ export async function extractExifData(file) {
   try {
     const data = await exifr.parse(file, {
       gps: true,
-      tiff: false,
-      ifd0: false,
+      tiff: true,
+      ifd0: true,
       exif: ["DateTimeOriginal", "CreateDate"],
     });
     if (!data) return { lat: null, lng: null, date: null };

@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { extractExifData, resizeImage } from "../utils";
-import { IconCamera, IconMapPin, IconX } from "./Icons";
+import { IconCamera, IconPhoto, IconMapPin, IconX } from "./Icons";
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -23,6 +23,7 @@ export default function TripForm({ onSave, onCancel, initialData = null }) {
   const [error, setError] = useState(null);
   const [dateFromExif, setDateFromExif] = useState(false);
   const fileRef = useRef(null);
+  const cameraRef = useRef(null);
 
   async function handleFile(e) {
     const file = e.target.files[0];
@@ -56,6 +57,7 @@ export default function TripForm({ onSave, onCancel, initialData = null }) {
     setGps(null);
     setDateFromExif(false);
     if (fileRef.current) fileRef.current.value = "";
+    if (cameraRef.current) cameraRef.current.value = "";
   }
 
   async function handleSubmit(e) {
@@ -149,34 +151,51 @@ export default function TripForm({ onSave, onCancel, initialData = null }) {
           onChange={handleFile}
           className="hidden"
         />
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleFile}
+          className="hidden"
+        />
 
         {!imageData ? (
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="w-full border-2 border-dashed border-slate-200 dark:border-neutral-600 hover:border-emerald-400 bg-neutral-50 dark:bg-neutral-700/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 rounded-2xl py-8 flex flex-col items-center gap-2 transition-all group"
-          >
-            {loading ? (
-              <>
-                <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                <span className="text-sm text-slate-400 dark:text-slate-500">
-                  Zpracovávám…
-                </span>
-              </>
-            ) : (
-              <>
-                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-neutral-600 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/60 flex items-center justify-center transition-colors">
-                  <IconCamera className="w-7 h-7 text-slate-400 group-hover:text-emerald-500" />
+          loading ? (
+            <div className="w-full border-2 border-dashed border-slate-200 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700/50 rounded-2xl py-8 flex flex-col items-center gap-2">
+              <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm text-slate-400 dark:text-slate-500">
+                Zpracovávám…
+              </span>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="flex-1 border-2 border-dashed border-slate-200 dark:border-neutral-600 hover:border-emerald-400 bg-neutral-50 dark:bg-neutral-700/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 rounded-2xl py-5 flex flex-col items-center gap-1.5 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-neutral-600 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/60 flex items-center justify-center transition-colors">
+                  <IconPhoto className="w-6 h-6 text-slate-400 group-hover:text-emerald-500" />
                 </div>
-                <span className="text-sm font-medium text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 transition-colors">
-                  Vyber fotku
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 transition-colors">
+                  Galerie
                 </span>
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                  JPG, PNG, HEIC…
+              </button>
+              <button
+                type="button"
+                onClick={() => cameraRef.current?.click()}
+                className="flex-1 border-2 border-dashed border-slate-200 dark:border-neutral-600 hover:border-emerald-400 bg-neutral-50 dark:bg-neutral-700/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 rounded-2xl py-5 flex flex-col items-center gap-1.5 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-neutral-600 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/60 flex items-center justify-center transition-colors">
+                  <IconCamera className="w-6 h-6 text-slate-400 group-hover:text-emerald-500" />
+                </div>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 transition-colors">
+                  Fotoaparát
                 </span>
-              </>
-            )}
-          </button>
+              </button>
+            </div>
+          )
         ) : (
           <div className="relative rounded-2xl overflow-hidden">
             <img

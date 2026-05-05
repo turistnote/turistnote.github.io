@@ -116,12 +116,15 @@ export default function App() {
     <div className="min-h-screen bg-neutral-100 dark:bg-neutral-900 transition-colors">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-emerald-700/95 backdrop-blur-md text-white px-4 py-3.5 flex items-center justify-between shadow-lg">
-        <div className="flex items-center gap-2.5">
+        <button
+          onClick={() => setView("list")}
+          className="flex items-center gap-2.5 hover:opacity-80 active:opacity-60 transition-opacity"
+        >
           <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center">
             <IconMountain className="w-4 h-4 text-white" />
           </div>
           <span className="font-bold text-base tracking-tight">TuristNote</span>
-        </div>
+        </button>
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen((o) => !o)}
