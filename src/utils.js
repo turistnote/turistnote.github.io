@@ -15,32 +15,44 @@ export function formatDate(isoDate) {
  * date is a string in 'YYYY-MM-DD' format.
  */
 export async function extractExifData(file) {
+  function validCoord(v) {
+    return v != null && isFinite(v) && !isNaN(v) ? v : null;
+  }
   try {
-    // exifr.gps() is more reliable for GPS on Android/HEIC than full parse
-    const [gpsData, exifData] = await Promise.all([
+    const [gpsData, fullData] = await Promise.all([
       exifr.gps(file).catch(() => null),
       exifr
         .parse(file, {
+          gps: true,
+          xmp: true,
           tiff: true,
           ifd0: true,
-          exif: ["DateTimeOriginal", "CreateDate"],
+          exif: true,
+          translateValues: true,
+          reviveValues: true,
+          sanitize: true,
         })
         .catch(() => null),
     ]);
 
-    const rawLat = gpsData?.latitude ?? null;
-    const rawLng = gpsData?.longitude ?? null;
-    const lat = rawLat != null && !isNaN(rawLat) ? rawLat : null;
-    const lng = rawLng != null && !isNaN(rawLng) ? rawLng : null;
+    console.debug("[exif] gps():", gpsData);
+    console.debug("[exif] parse():", fullData);
 
-    const rawDate = exifData?.DateTimeOriginal ?? exifData?.CreateDate ?? null;
+    const lat =
+      validCoord(gpsData?.latitude) ?? validCoord(fullData?.latitude) ?? null;
+    const lng =
+      validCoord(gpsData?.longitude) ?? validCoord(fullData?.longitude) ?? null;
+
+    const rawDate =
+      fullData?.DateTimeOriginal ?? fullData?.CreateDate ?? null;
     let date = null;
     if (rawDate instanceof Date && !isNaN(rawDate)) {
       date = rawDate.toISOString().slice(0, 10);
     }
 
     return { lat, lng, date };
-  } catch {
+  } catch (e) {
+    console.debug("[exif] error:", e);
     return { lat: null, lng: null, date: null };
   }
 }
