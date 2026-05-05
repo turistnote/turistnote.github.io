@@ -29,6 +29,13 @@ export default function TripForm({ onSave, onCancel, initialData = null }) {
   async function handleFile(e) {
     const file = e.target.files[0];
     if (!file) return;
+    if (
+      !file.type.startsWith("image/") &&
+      !file.name.match(/\.(jpe?g|png|heic|heif|webp|tiff?)$/i)
+    ) {
+      setError("Vyber prosím obrázek.");
+      return;
+    }
     console.log("[handleFile] file:", file.name, file.type, file.size);
     setLoading(true);
     setError(null);
@@ -174,14 +181,12 @@ export default function TripForm({ onSave, onCancel, initialData = null }) {
         <input
           ref={fileRef}
           type="file"
-          accept="image/jpeg,image/png,image/heic,image/heif,image/webp"
           onChange={handleFile}
           className="hidden"
         />
         <input
           ref={cameraRef}
           type="file"
-          accept="image/jpeg,image/png,image/heic,image/heif,image/webp"
           capture="environment"
           onChange={handleFile}
           className="hidden"
