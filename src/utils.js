@@ -10,6 +10,96 @@ export function formatDate(isoDate) {
 }
 
 /**
+ * Raw EXIF GPS reader — bypasses exifr, reads GPS IFD directly from JPEG bytes.
+ * Handles Xiaomi/MediaTek files where exifr returns NaN for GPS rationals.
+ */
+async function readRawExifGps(file) {
+  try {
+    const buf = await file.arrayBuffer();
+    const dv = new DataView(buf);
+
+    // Scan JPEG segments for APP1/Exif
+    let pos = 2;
+    while (pos + 4 < dv.byteLength) {
+      if (dv.getUint8(pos) !== 0xff) break;
+      const marker = dv.getUint8(pos + 1);
+      const segLen = dv.getUint16(pos + 2);
+      if (
+        marker === 0xe1 &&
+        dv.getUint8(pos + 4) === 0x45 &&
+        dv.getUint8(pos + 5) === 0x78 &&
+        dv.getUint8(pos + 6) === 0x69 &&
+        dv.getUint8(pos + 7) === 0x66 &&
+        dv.getUint16(pos + 8) === 0
+      ) {
+        const base = pos + 10; // TIFF header start
+        const le = dv.getUint16(base) === 0x4949;
+        const r16 = (o) => dv.getUint16(base + o, le);
+        const r32 = (o) => dv.getUint32(base + o, le);
+
+        // Find GPS IFD pointer (tag 0x8825) in IFD0
+        const ifd0 = r32(4);
+        const ifd0n = r16(ifd0);
+        let gpsOff = null;
+        for (let i = 0; i < ifd0n; i++) {
+          const e = ifd0 + 2 + i * 12;
+          if (r16(e) === 0x8825) {
+            gpsOff = r32(e + 8);
+            break;
+          }
+        }
+        if (gpsOff === null) return null;
+
+        // Read GPS IFD
+        const tags = {};
+        const gpsn = r16(gpsOff);
+        for (let i = 0; i < gpsn; i++) {
+          const e = gpsOff + 2 + i * 12;
+          const tag = r16(e);
+          const type = r16(e + 2);
+          const count = r32(e + 4);
+          if (type === 2) {
+            // ASCII
+            const off = count <= 4 ? e + 8 : r32(e + 8);
+            let s = "";
+            for (let c = 0; c < count - 1; c++)
+              s += String.fromCharCode(dv.getUint8(base + off + c));
+            tags[tag] = s;
+          } else if (type === 5) {
+            // RATIONAL (always at offset, 8 bytes each)
+            const off = r32(e + 8);
+            const vals = [];
+            for (let r = 0; r < count; r++) {
+              const num = r32(off + r * 8);
+              const den = r32(off + r * 8 + 4);
+              vals.push(den === 0 ? 0 : num / den);
+            }
+            tags[tag] = vals;
+          }
+        }
+
+        const latArr = tags[2]; // GPSLatitude
+        const lonArr = tags[4]; // GPSLongitude
+        if (!Array.isArray(latArr) || !Array.isArray(lonArr)) return null;
+
+        let lat = latArr[0] + latArr[1] / 60 + (latArr[2] || 0) / 3600;
+        let lon = lonArr[0] + lonArr[1] / 60 + (lonArr[2] || 0) / 3600;
+        if (tags[1] === "S") lat = -lat; // GPSLatitudeRef
+        if (tags[3] === "W") lon = -lon; // GPSLongitudeRef
+
+        if (isFinite(lat) && isFinite(lon) && (lat !== 0 || lon !== 0))
+          return { latitude: lat, longitude: lon };
+        return null;
+      }
+      pos += 2 + segLen;
+    }
+  } catch (e) {
+    console.log("[exif] rawGps error:", e);
+  }
+  return null;
+}
+
+/**
  * Extract GPS coordinates and date from an image file using exifr.
  * Returns { lat, lng, date } — each field may be null if not found.
  * date is a string in 'YYYY-MM-DD' format.
@@ -19,7 +109,7 @@ export async function extractExifData(file) {
     return v != null && isFinite(v) && !isNaN(v) ? v : null;
   }
   try {
-    const [gpsData, fullData] = await Promise.all([
+    const [gpsData, fullData, rawGps] = await Promise.all([
       exifr.gps(file).catch(() => null),
       exifr
         .parse(file, {
@@ -33,15 +123,27 @@ export async function extractExifData(file) {
           sanitize: true,
         })
         .catch(() => null),
+      readRawExifGps(file),
     ]);
 
     console.log("[exif] gps():", gpsData);
-    console.log("[exif] parse():", fullData);
+    console.log(
+      "[exif] parse() lat/lon:",
+      fullData?.latitude,
+      fullData?.longitude,
+    );
+    console.log("[exif] rawGps:", rawGps);
 
     const lat =
-      validCoord(gpsData?.latitude) ?? validCoord(fullData?.latitude) ?? null;
+      validCoord(gpsData?.latitude) ??
+      validCoord(fullData?.latitude) ??
+      validCoord(rawGps?.latitude) ??
+      null;
     const lng =
-      validCoord(gpsData?.longitude) ?? validCoord(fullData?.longitude) ?? null;
+      validCoord(gpsData?.longitude) ??
+      validCoord(fullData?.longitude) ??
+      validCoord(rawGps?.longitude) ??
+      null;
 
     const rawDate = fullData?.DateTimeOriginal ?? fullData?.CreateDate ?? null;
     let date = null;
