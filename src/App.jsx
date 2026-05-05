@@ -117,7 +117,7 @@ export default function App() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-emerald-700/95 backdrop-blur-md text-white px-4 py-3.5 flex items-center justify-between shadow-lg">
         <button
-          onClick={() => setView("list")}
+          onClick={() => setView("dashboard")}
           className="flex items-center gap-2.5 hover:opacity-80 active:opacity-60 transition-opacity"
         >
           <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
