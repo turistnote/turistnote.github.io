@@ -113,16 +113,26 @@ export default function TripForm({ onSave, onCancel, initialData = null }) {
           placeholder="např. Karlštejn"
         />
         {nameSuggestion && name !== nameSuggestion && (
-          <button
-            type="button"
-            onClick={() => {
-              setName(nameSuggestion);
-              setNameSuggestion(null);
-            }}
-            className="self-start text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700 rounded-full px-3 py-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors flex items-center gap-1.5"
-          >
-            <IconMapPin className="w-3 h-3" /> Použít: {nameSuggestion}
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => {
+                setName(nameSuggestion);
+                setNameSuggestion(null);
+              }}
+              className="self-start text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700 rounded-full px-3 py-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors flex items-center gap-1.5"
+            >
+              <IconMapPin className="w-3 h-3" /> Použít: {nameSuggestion}
+            </button>
+            <a
+              href="https://www.openstreetmap.org/copyright"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-slate-400 dark:text-slate-500 hover:underline"
+            >
+              © OpenStreetMap
+            </a>
+          </div>
         )}
       </div>
 

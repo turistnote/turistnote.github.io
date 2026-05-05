@@ -16,6 +16,7 @@ import {
   IconDotsVertical,
   IconSun,
   IconMoon,
+  IconX,
 } from "./components/Icons";
 
 // Home base – Prague city centre. Adjust as needed.
@@ -33,6 +34,8 @@ export default function App() {
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
   const importRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -47,6 +50,33 @@ export default function App() {
     document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem("pwa-install-dismissed");
+    if (dismissed) return;
+    function handler(e) {
+      e.preventDefault();
+      setInstallPrompt(e);
+      setShowInstallBanner(true);
+    }
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  async function handleInstall() {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === "accepted") {
+      setShowInstallBanner(false);
+      setInstallPrompt(null);
+    }
+  }
+
+  function dismissInstallBanner() {
+    setShowInstallBanner(false);
+    localStorage.setItem("pwa-install-dismissed", "1");
+  }
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -189,6 +219,30 @@ export default function App() {
         />
       </header>
 
+      {showInstallBanner && (
+        <div className="bg-emerald-600 text-white px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <IconMountain className="w-5 h-5 flex-shrink-0" />
+            <span className="text-sm font-medium truncate">Nainstalovat TuristNote jako aplikaci?</span>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={handleInstall}
+              className="text-xs font-semibold bg-white text-emerald-700 rounded-lg px-3 py-1.5 hover:bg-emerald-50 transition-colors"
+            >
+              Instalovat
+            </button>
+            <button
+              onClick={dismissInstallBanner}
+              className="text-white/70 hover:text-white transition-colors"
+              aria-label="Zavřít"
+            >
+              <IconX className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {showBackupNudge && trips && (
         <BackupNudge
           tripCount={trips.length}
@@ -217,7 +271,19 @@ export default function App() {
               <IconPlus className="w-5 h-5" /> Přidat výlet
             </button>
 
-            {trips && trips.length > 0 ? (
+            {trips === undefined ? (
+              <section className="flex flex-col gap-2.5">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-white dark:bg-neutral-800 rounded-2xl p-4 flex gap-3 animate-pulse">
+                    <div className="w-16 h-16 rounded-xl bg-slate-200 dark:bg-neutral-700 flex-shrink-0" />
+                    <div className="flex-1 flex flex-col gap-2 justify-center">
+                      <div className="h-4 bg-slate-200 dark:bg-neutral-700 rounded-full w-2/3" />
+                      <div className="h-3 bg-slate-100 dark:bg-neutral-700/60 rounded-full w-1/3" />
+                    </div>
+                  </div>
+                ))}
+              </section>
+            ) : trips.length > 0 ? (
               <section className="flex flex-col gap-2.5">
                 <h2 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">
                   Výlety · {trips.length}
