@@ -16,18 +16,22 @@ export function formatDate(isoDate) {
  */
 export async function extractExifData(file) {
   try {
-    const data = await exifr.parse(file, {
-      gps: true,
-      tiff: true,
-      ifd0: true,
-      exif: ["DateTimeOriginal", "CreateDate"],
-    });
-    if (!data) return { lat: null, lng: null, date: null };
+    // exifr.gps() is more reliable for GPS on Android/HEIC than full parse
+    const [gpsData, exifData] = await Promise.all([
+      exifr.gps(file).catch(() => null),
+      exifr.parse(file, {
+        tiff: true,
+        ifd0: true,
+        exif: ["DateTimeOriginal", "CreateDate"],
+      }).catch(() => null),
+    ]);
 
-    const lat = data.latitude ?? null;
-    const lng = data.longitude ?? null;
+    const rawLat = gpsData?.latitude ?? null;
+    const rawLng = gpsData?.longitude ?? null;
+    const lat = rawLat != null && !isNaN(rawLat) ? rawLat : null;
+    const lng = rawLng != null && !isNaN(rawLng) ? rawLng : null;
 
-    const rawDate = data.DateTimeOriginal ?? data.CreateDate ?? null;
+    const rawDate = exifData?.DateTimeOriginal ?? exifData?.CreateDate ?? null;
     let date = null;
     if (rawDate instanceof Date && !isNaN(rawDate)) {
       date = rawDate.toISOString().slice(0, 10);
