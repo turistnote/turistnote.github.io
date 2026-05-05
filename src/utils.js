@@ -35,8 +35,8 @@ export async function extractExifData(file) {
         .catch(() => null),
     ]);
 
-    console.debug("[exif] gps():", gpsData);
-    console.debug("[exif] parse():", fullData);
+    console.log("[exif] gps():", gpsData);
+    console.log("[exif] parse():", fullData);
 
     const lat =
       validCoord(gpsData?.latitude) ?? validCoord(fullData?.latitude) ?? null;
@@ -51,7 +51,7 @@ export async function extractExifData(file) {
 
     return { lat, lng, date };
   } catch (e) {
-    console.debug("[exif] error:", e);
+    console.log("[exif] error:", e);
     return { lat: null, lng: null, date: null };
   }
 }

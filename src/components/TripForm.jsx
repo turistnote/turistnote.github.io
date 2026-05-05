@@ -29,6 +29,7 @@ export default function TripForm({ onSave, onCancel, initialData = null }) {
   async function handleFile(e) {
     const file = e.target.files[0];
     if (!file) return;
+    console.log("[handleFile] file:", file.name, file.type, file.size);
     setLoading(true);
     setError(null);
     setFileName(file.name);
