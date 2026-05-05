@@ -223,7 +223,9 @@ export default function App() {
         <div className="bg-emerald-600 text-white px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <IconMountain className="w-5 h-5 flex-shrink-0" />
-            <span className="text-sm font-medium truncate">Nainstalovat TuristNote jako aplikaci?</span>
+            <span className="text-sm font-medium truncate">
+              Nainstalovat TuristNote jako aplikaci?
+            </span>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
@@ -274,7 +276,10 @@ export default function App() {
             {trips === undefined ? (
               <section className="flex flex-col gap-2.5">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-white dark:bg-neutral-800 rounded-2xl p-4 flex gap-3 animate-pulse">
+                  <div
+                    key={i}
+                    className="bg-white dark:bg-neutral-800 rounded-2xl p-4 flex gap-3 animate-pulse"
+                  >
                     <div className="w-16 h-16 rounded-xl bg-slate-200 dark:bg-neutral-700 flex-shrink-0" />
                     <div className="flex-1 flex flex-col gap-2 justify-center">
                       <div className="h-4 bg-slate-200 dark:bg-neutral-700 rounded-full w-2/3" />
