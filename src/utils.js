@@ -19,11 +19,13 @@ export async function extractExifData(file) {
     // exifr.gps() is more reliable for GPS on Android/HEIC than full parse
     const [gpsData, exifData] = await Promise.all([
       exifr.gps(file).catch(() => null),
-      exifr.parse(file, {
-        tiff: true,
-        ifd0: true,
-        exif: ["DateTimeOriginal", "CreateDate"],
-      }).catch(() => null),
+      exifr
+        .parse(file, {
+          tiff: true,
+          ifd0: true,
+          exif: ["DateTimeOriginal", "CreateDate"],
+        })
+        .catch(() => null),
     ]);
 
     const rawLat = gpsData?.latitude ?? null;
